@@ -8,13 +8,14 @@ authors = ["oncomouse <oncomouse@gmail.com>"]
 python = "^3.5"
 pygls = "^0.9.0"
 bibparse = "^1.0.0"
+flake8 = "^3.8.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
 
+[tool.poetry.scripts]
+citation-langserver = 'citation_langserver.cli:cli'
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.poetry.scripts]
-jedi-language-server = 'citation_langserver.cli:cli'
