@@ -45,17 +45,13 @@ def __handle_glob(my_file):
     return output
 
 
-def __process_norm_file(my_file):
-    return os.path.normpath(os.path.expanduser(my_file))
-
-
 def __norm_file(my_file):
     output = [my_file]
     if my_file[0] == '.':
         output = [
             os.path.join(directory, my_file) for directory in workspace_folders
         ]
-    return [__process_norm_file(file) for file in output]
+    return [os.path.normpath(os.path.expanduser(file)) for file in output]
 
 
 def __read_bibliographies(bibliographies):
@@ -64,11 +60,12 @@ def __read_bibliographies(bibliographies):
         __read_bibliography(file)
 
 
-def __read_bibliography(file):
-    for f in __handle_glob(__norm_file(file)):
-        if not os.path.exists(f):
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f)
-        cached_bibliographies.read(os.path.abspath(f))
+def __read_bibliography(maybe_glob):
+    for file in __handle_glob(__norm_file(maybe_glob)):
+        if not os.path.exists(file):
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
+                                    file)
+        cached_bibliographies.read(os.path.abspath(file))
         keys.update(key_positions(file))
 
 
@@ -98,9 +95,10 @@ def initialize(ls: LanguageServer, params: types.InitializeParams):
     if params.workspace.configuration:
         try:
             ls.get_configuration(
-                types.ConfigurationParams(
-                    [types.ConfigurationItem('', 'citation')]),
-                __update_bibliography_configuration)
+                types.ConfigurationParams([
+                    types.ConfigurationItem(
+                        '', CitationLanguageServer.CONFIGURATION_SECTION)
+                ]), __update_bibliography_configuration)
         except FileNotFoundError as err:
             ls.show_message("File Not Found Error: {}".format(err),
                             types.MessageType.Error)
@@ -115,7 +113,10 @@ def did_change(ls: LanguageServer, params: types.DidChangeTextDocumentParams):
 def did_change_configuration(ls: LanguageServer,
                              params: types.DidChangeConfigurationParams):
     try:
-        __update_bibliography_configuration([params.settings.citation])
+        __update_bibliography_configuration([
+            getattr(params.settings,
+                    CitationLanguageServer.CONFIGURATION_SECTION)
+        ])
     except FileNotFoundError as err:
         ls.show_message("File Not Found Error: {}".format(err),
                         types.MessageType.Error)
