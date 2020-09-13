@@ -8,7 +8,7 @@ import os
 import re
 from glob import glob
 from pygls import types
-from pygls.features import (HOVER, COMPLETION, TEXT_DOCUMENT_DID_CHANGE,
+from pygls.features import (HOVER, COMPLETION, TEXT_DOCUMENT_DID_CHANGE, INITIALIZED,
                             WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS,
                             WORKSPACE_DID_CHANGE_CONFIGURATION)
 from pygls.server import LanguageServer
@@ -30,30 +30,22 @@ class CitationLanguageServer(LanguageServer):
 
 citation_langserver = CitationLanguageServer()
 
-# async def get_configuration(ls: LanguageServer):
-#     config = await ls.get_configuration_async(
-#         types.ConfigurationParams([
-#             types.ConfigurationItem(
-#                 '', CitationLanguageServer.CONFIGURATION_SECTION)
-#         ]))
-#     for key in config:
-#         if key in configuration:
-#             configuration[key] = config[key]
+def __read_bibliographies(bibliographies):
+    cached_bibliographies = Biblio()
+    for file in bibliographies:
+        __read_bibliography(file)
 
 
 def __read_bibliography(file):
-    cached_bibliographies = Biblio()
     for f in glob(os.path.expanduser(file)):
+        if not os.path.exists(f):
+            print("Error locating {f}".format(f))
         cached_bibliographies.read(f)
-    print(cached_bibliographies)
 
 
-completion_list = types.CompletionList(False, [])
-
-
-def __generate_completion_list(bibliographies):
-    output = []
-    for key, entry in bibliographies.items():
+def __generate_completion_list():
+    types.CompletionList(False, [])
+    for key, entry in cached_bibliographies.items():
         yield types.CompletionItem(label="@{}".format(key),
                                    kind=types.CompletionItemKind.Text,
                                    documentation=__format_info(entry),
@@ -71,6 +63,17 @@ def get_markdown_file(ls: LanguageServer, uri: str, update: bool = False):
         markdown_files[uri] = result
     return result
 
+def __callback(config):
+    bibliographies = getattr(config[0], 'bibliographies')
+    if bibliographies != configuration['bibliographies']:
+        configuration['bibliographies'] = bibliographies
+        __read_bibliographies(configuration['bibliographies'])
+
+@citation_langserver.feature(INITIALIZED)
+def initialized(ls: LanguageServer, _):
+    conf = ls.get_configuration(types.ConfigurationParams([
+        types.ConfigurationItem('', 'citation')
+        ]), __callback)
 
 @citation_langserver.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: LanguageServer, params: types.DidChangeTextDocumentParams):
@@ -82,11 +85,9 @@ def did_change_configuration(ls: LanguageServer,
                              params: types.DidChangeConfigurationParams):
     if hasattr(params.settings.citation, 'bibliographies'):
         bibliographies = getattr(params.settings.citation, 'bibliographies')
-        configuration['bibliographies'] = bibliographies
-        for file in bibliographies:
-            __read_bibliography(file)
-        # __generate_completion_list()
-
+        if configuration['bibliographies'] != bibliographies:
+            configuration['bibliographies'] = bibliographies
+            __read_bibliographies(bibliographies)
 
 # @citation_langserver.feature(WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
 # def did_change_workspace_folders(
@@ -96,27 +97,12 @@ def did_change_configuration(ls: LanguageServer,
 #         read_bibliography(configuration['bibliographies'])
 
 
-async def __load_bibliographies(ls: LanguageServer):
-    if len(cached_bibliographies.keys()) == 0:
-        config = await ls.get_configuration_async(
-            types.ConfigurationParams(
-                [types.ConfigurationItem('', 'citation')]))
-        bibliographies = getattr(config[0], 'bibliographies')
-        configuration['bibliographies'] = bibliographies
-        for file in bibliographies:
-            print("Caching {}…".format(file))
-            __read_bibliography(file)
-    return cached_bibliographies
-
-
 @citation_langserver.feature(HOVER)
 async def hover(ls: LanguageServer, params: types.TextDocumentPositionParams):
-    bibliographies = await __load_bibliographies(ls)
-    print("textDocument/hover {}".format(repr(params)))
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, start, stop = find_key(markdown_file, params.position)
-    if key is not None and key in bibliographies:
-        return types.Hover(contents=__format_info(bibliographies[key]),
+    if key is not None and key in cached_bibliographies:
+        return types.Hover(contents=__format_info(cached_bibliographies[key]),
                            range=types.Range(
                                start=types.Position(line=params.position.line,
                                                     character=start),
@@ -139,11 +125,7 @@ def __format_info(entry):
 
 
 @citation_langserver.feature(COMPLETION, trigger_characters=['@'])
-async def completion(ls: LanguageServer,
+def completion(ls: LanguageServer,
                      params: types.CompletionParams = None):
-    bibliographies = await __load_bibliographies(ls)
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
-    key = find_key(markdown_file, params.position)
-    print("textDocument/completion {}".format(repr(params)))
-    return types.CompletionList(
-        False, list(__generate_completion_list(bibliographies)))
+    return types.CompletionList(False, list(__generate_completion_list()))
