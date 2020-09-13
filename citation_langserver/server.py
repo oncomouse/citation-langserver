@@ -55,7 +55,7 @@ def __norm_file(my_file):
 
 
 def __read_bibliographies(bibliographies):
-    cached_bibliographies = Biblio()
+    cached_bibliographies.clear()
     for file in bibliographies:
         __read_bibliography(file)
 
@@ -132,7 +132,7 @@ def did_change_workspace_folders(
 
 
 @citation_langserver.feature(HOVER)
-async def hover(ls: LanguageServer, params: types.TextDocumentPositionParams):
+def hover(ls: LanguageServer, params: types.TextDocumentPositionParams):
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, start, stop = find_key(markdown_file, params.position)
     if key is not None and key in cached_bibliographies:
