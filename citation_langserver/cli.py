@@ -8,8 +8,7 @@ logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
 
 
 def add_arguments(parser):
-    parser.description = "simple json server example"
-
+    parser.description = "LanguageServer for BibTeX files"
     parser.add_argument("--tcp",
                         action="store_true",
                         help="Use TCP server instead of stdio")

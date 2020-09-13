@@ -25,7 +25,7 @@ def key_positions(file_path):
 def find_key(doc, position):
     line = doc["source"].split("\n")[position.line]
     start_char = position.character - 1
-    stop_char = position.character - 1
+    stop_char = position.character
     while start_char >= 0:
         if line[start_char] == '@':
             break
