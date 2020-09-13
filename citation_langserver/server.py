@@ -19,7 +19,7 @@ from .completion import generate_list
 from .format import info
 
 cached_bibliographies = Biblio()
-workspace_folders = {}
+workspace_folders = []
 configuration = {'bibliographies': ['~/*.bib']}
 glob_re = re.compile(r"\*")
 keys = {}
@@ -36,9 +36,26 @@ citation_langserver = CitationLanguageServer()
 
 
 def __handle_glob(my_file):
-    if glob_re.match(my_file):
-        return glob(my_file)
-    return [my_file]
+    output = []
+    for file in my_file:
+        if glob_re.match(file):
+            output.extend(glob(file))
+        else:
+            output.append(file)
+    return output
+
+
+def __process_norm_file(my_file):
+    return os.path.normpath(os.path.expanduser(my_file))
+
+
+def __norm_file(my_file):
+    output = [my_file]
+    if my_file[0] == '.':
+        output = [
+            os.path.join(directory, my_file) for directory in workspace_folders
+        ]
+    return [__process_norm_file(file) for file in output]
 
 
 def __read_bibliographies(bibliographies):
@@ -48,7 +65,7 @@ def __read_bibliographies(bibliographies):
 
 
 def __read_bibliography(file):
-    for f in __handle_glob(os.path.expanduser(file)):
+    for f in __handle_glob(__norm_file(file)):
         if not os.path.exists(f):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f)
         cached_bibliographies.read(os.path.abspath(f))
@@ -77,7 +94,7 @@ def get_markdown_file(ls: LanguageServer, uri: str, update: bool = False):
 @citation_langserver.feature(INITIALIZE)
 def initialize(ls: LanguageServer, params: types.InitializeParams):
     if params.rootPath:
-        os.chdir(params.rootPath)
+        workspace_folders.append(params.rootPath)
     if params.workspace.configuration:
         try:
             ls.get_configuration(
@@ -106,9 +123,11 @@ def did_change_configuration(ls: LanguageServer,
 
 @citation_langserver.feature(WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
 def did_change_workspace_folders(
-        _ls: LanguageServer, _params: types.DidChangeWorkspaceFoldersParams):
-    if any(glob_re.match(line) for line in configuration['bibliographies']):
-        __read_bibliographies(configuration['bibliographies'])
+        _ls: LanguageServer, params: types.DidChangeWorkspaceFoldersParams):
+    workspace_folders.extend(params.event.added)
+    for folder in params.event.removed:
+        workspace_folders.remove(folder)
+    __read_bibliographies(configuration['bibliographies'])
 
 
 @citation_langserver.feature(HOVER)
