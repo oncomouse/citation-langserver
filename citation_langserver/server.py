@@ -3,12 +3,12 @@ Creates the language server constant and wraps "features" with it.
 Official language server spec:
     https://microsoft.github.io/language-server-protocol/specification
 """
-import json
 import os
 import re
 from glob import glob
 from pygls import types
-from pygls.features import (HOVER, COMPLETION, TEXT_DOCUMENT_DID_CHANGE, INITIALIZED,
+from pygls.features import (HOVER, COMPLETION, TEXT_DOCUMENT_DID_CHANGE,
+                            INITIALIZED,
                             WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS,
                             WORKSPACE_DID_CHANGE_CONFIGURATION)
 from pygls.server import LanguageServer
@@ -29,6 +29,7 @@ class CitationLanguageServer(LanguageServer):
 
 
 citation_langserver = CitationLanguageServer()
+
 
 def __read_bibliographies(bibliographies):
     cached_bibliographies = Biblio()
@@ -63,17 +64,21 @@ def get_markdown_file(ls: LanguageServer, uri: str, update: bool = False):
         markdown_files[uri] = result
     return result
 
+
 def __callback(config):
     bibliographies = getattr(config[0], 'bibliographies')
     if bibliographies != configuration['bibliographies']:
         configuration['bibliographies'] = bibliographies
         __read_bibliographies(configuration['bibliographies'])
 
+
 @citation_langserver.feature(INITIALIZED)
-def initialized(ls: LanguageServer, _):
-    conf = ls.get_configuration(types.ConfigurationParams([
-        types.ConfigurationItem('', 'citation')
-        ]), __callback)
+def initialized(ls: LanguageServer, params: types.InitializeParams):
+    if params.workspace.configuration:
+        conf = ls.get_configuration(
+            types.ConfigurationParams(
+                [types.ConfigurationItem('', 'citation')]), __callback)
+
 
 @citation_langserver.feature(TEXT_DOCUMENT_DID_CHANGE)
 def did_change(ls: LanguageServer, params: types.DidChangeTextDocumentParams):
@@ -83,11 +88,13 @@ def did_change(ls: LanguageServer, params: types.DidChangeTextDocumentParams):
 @citation_langserver.feature(WORKSPACE_DID_CHANGE_CONFIGURATION)
 def did_change_configuration(ls: LanguageServer,
                              params: types.DidChangeConfigurationParams):
+    print("workspace/didChangeConfiguration {}".format(params))
     if hasattr(params.settings.citation, 'bibliographies'):
         bibliographies = getattr(params.settings.citation, 'bibliographies')
         if configuration['bibliographies'] != bibliographies:
             configuration['bibliographies'] = bibliographies
             __read_bibliographies(bibliographies)
+
 
 # @citation_langserver.feature(WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
 # def did_change_workspace_folders(
@@ -125,7 +132,7 @@ def __format_info(entry):
 
 
 @citation_langserver.feature(COMPLETION, trigger_characters=['@'])
-def completion(ls: LanguageServer,
-                     params: types.CompletionParams = None):
+def completion(ls: LanguageServer, params: types.CompletionParams = None):
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
+    print(__generate_completion_list())
     return types.CompletionList(False, list(__generate_completion_list()))
