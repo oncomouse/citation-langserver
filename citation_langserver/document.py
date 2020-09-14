@@ -1,9 +1,36 @@
-from typing import Dict, List
+"""Citation Language Server Document Utilities"""
+import re
+from typing import Dict, List, Tuple
 from pygls.types import Location, Range, Position
 from pygls.uris import from_fs_path
+__non_cite_key_re = re.compile(r"[,\s}{@\]\[]")
+
+
+def find_key(doc: Dict[str, str], position: Position) -> Tuple[str, int, int]:
+    """Given a representation of a document and a position object, find if the
+    user is typing a key at that position and return the entire typed key, if
+    present."""
+    line = doc["source"].split("\n")[position.line]
+    start_char = position.character - 1
+    stop_char = position.character
+    while start_char >= 0:
+        if line[start_char] == '@':
+            break
+        if __non_cite_key_re.match(line[start_char]):
+            return [None, None, None]
+        start_char -= 1
+    if start_char < 0:
+        return [None, None, None]
+    while stop_char < len(line):
+        if __non_cite_key_re.match(line[stop_char]):
+            break
+        stop_char += 1
+    return (line[start_char + 1:stop_char], start_char + 1, stop_char - 1)
 
 
 def get_references(doc: Dict[str, str], symbol: str) -> List[Location]:
+    """Given a representation of a document and a symbol string, return the
+    Location of every use of that symbol within the document."""
     current_line = 0
     output = []
     symbol_len = len(symbol)

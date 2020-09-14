@@ -1,8 +1,11 @@
+"""Citation Language Server Formatting Utilities"""
 import re
 from typing import Dict
+from bibparse import BibItem
 
 
-def info(entry: Dict[str, str]) -> str:
+def info(entry: BibItem) -> str:
+    """Given a bibliography entry, describe it for human readers."""
     return "{title}{author}{date}".format(
         title=("Title: {}\n".format(re.sub(r"[}{]", "", entry["title"]))
                if "title" in entry else ""),
