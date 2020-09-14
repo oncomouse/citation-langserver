@@ -5,7 +5,6 @@ Official language server spec:
 """
 import errno
 import os
-import re
 from typing import Dict, List, Any
 from glob import glob
 from pygls import types
@@ -23,7 +22,6 @@ from .document import get_references, find_key
 cached_bibliographies = Biblio()
 workspace_folders = []
 configuration = {'bibliographies': ['~/*.bib']}
-glob_re = re.compile(r"\*")
 keys = {}
 
 
@@ -41,7 +39,7 @@ citation_langserver = CitationLanguageServer()
 def __handle_glob(my_file: List[str]) -> List[str]:
     output = []
     for file in my_file:
-        if glob_re.match(file):
+        if file.count("*") > 0:
             output.extend(glob(file))
         else:
             output.append(file)
