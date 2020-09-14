@@ -82,47 +82,45 @@ def __update_bibliography_configuration(config: List[Any]) -> None:
 markdown_files = {}
 
 
-def get_markdown_file(language_server: LanguageServer,
+def get_markdown_file(ls: LanguageServer,
                       uri: str,
                       update: bool = False) -> Dict[str, str]:
     """Given a document uri and a language server, get the cached file contents"""
     result = None if update else markdown_files.get(uri)
     if not result:
-        document = language_server.workspace.get_document(uri)
+        document = ls.workspace.get_document(uri)
         result = {'source': document.source, 'path': document.path}
         markdown_files[uri] = result
     return result
 
 
 @citation_langserver.feature(INITIALIZE)
-def initialize(language_server: LanguageServer,
-               params: types.InitializeParams) -> None:
+def initialize(ls: LanguageServer, params: types.InitializeParams) -> None:
     """Initialization handler; sets rootPath and gets configuration, if possible"""
     if params.rootPath:
         workspace_folders.append(params.rootPath)
     if params.workspace.configuration:
         try:
-            language_server.get_configuration(
+            ls.get_configuration(
                 types.ConfigurationParams([
                     types.ConfigurationItem(
                         '', CitationLanguageServer.CONFIGURATION_SECTION)
                 ]), __update_bibliography_configuration)
         except FileNotFoundError as err:
-            language_server.show_message(
-                "File Not Found Error: {}".format(err),
-                types.MessageType.Error)
+            ls.show_message("File Not Found Error: {}".format(err),
+                            types.MessageType.Error)
 
 
 @citation_langserver.feature(TEXT_DOCUMENT_DID_CHANGE)
-def did_change(language_server: LanguageServer,
+def did_change(ls: LanguageServer,
                params: types.DidChangeTextDocumentParams) -> None:
     """Update document cache on document change event."""
-    get_markdown_file(language_server, params.textDocument.uri, True)
+    get_markdown_file(ls, params.textDocument.uri, True)
 
 
 @citation_langserver.feature(WORKSPACE_DID_CHANGE_CONFIGURATION)
 def did_change_configuration(
-        language_server: LanguageServer,
+        ls: LanguageServer,
         params: types.DidChangeConfigurationParams) -> None:
     """Change the bibliography path on configuration change"""
     try:
@@ -131,8 +129,8 @@ def did_change_configuration(
                     CitationLanguageServer.CONFIGURATION_SECTION)
         ])
     except FileNotFoundError as err:
-        language_server.show_message("File Not Found Error: {}".format(err),
-                                     types.MessageType.Error)
+        ls.show_message("File Not Found Error: {}".format(err),
+                        types.MessageType.Error)
 
 
 @citation_langserver.feature(WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
@@ -147,10 +145,10 @@ def did_change_workspace_folders(
 
 
 @citation_langserver.feature(HOVER)
-def hover(language_server: LanguageServer,
+def hover(ls: LanguageServer,
           params: types.TextDocumentPositionParams) -> types.Hover:
     """Get hover information for a symbol, if present at position"""
-    markdown_file = get_markdown_file(language_server, params.textDocument.uri)
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, start, stop = find_key(markdown_file, params.position)
     if key is not None and key in cached_bibliographies:
         return types.Hover(contents=info(cached_bibliographies[key]),
@@ -163,10 +161,10 @@ def hover(language_server: LanguageServer,
 
 
 @citation_langserver.feature(COMPLETION)  # , trigger_characters=['@'])
-def completion(language_server: LanguageServer,
+def completion(ls: LanguageServer,
                params: types.CompletionParams = None) -> types.CompletionList:
     """Handle completion if the user is typing a key"""
-    markdown_file = get_markdown_file(language_server, params.textDocument.uri)
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None:
         return []
@@ -176,10 +174,10 @@ def completion(language_server: LanguageServer,
 
 @citation_langserver.feature(DEFINITION)
 def definition(
-        language_server: LanguageServer,
+        ls: LanguageServer,
         params: types.TextDocumentPositionParams = None) -> types.Location:
     """Goto definition of symbol, if a bibliography key is present"""
-    markdown_file = get_markdown_file(language_server, params.textDocument.uri)
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None or not key in keys:
         return None
@@ -194,10 +192,10 @@ def definition(
 
 
 @citation_langserver.feature(REFERENCES)
-def references(language_server: LanguageServer,
+def references(ls: LanguageServer,
                params: types.ReferenceParams = None) -> List[types.Location]:
     """Find references to current symbol, if a bibliography key is present"""
-    markdown_file = get_markdown_file(language_server, params.textDocument.uri)
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None:
         return None
@@ -205,10 +203,10 @@ def references(language_server: LanguageServer,
 
 
 @citation_langserver.feature(RENAME)
-def rename(language_server: LanguageServer,
+def rename(ls: LanguageServer,
            params: types.RenameParams = None) -> types.WorkspaceEdit:
     """Rename the symbol, if a bibliography key is present"""
-    markdown_file = get_markdown_file(language_server, params.textDocument.uri)
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     new_key = params.newName
     output = {}
