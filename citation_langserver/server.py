@@ -9,11 +9,12 @@ import re
 from typing import Dict, List, Any
 from glob import glob
 from pygls import types
-from pygls.features import (HOVER, COMPLETION, DEFINITION, REFERENCES,
+from pygls.features import (HOVER, COMPLETION, DEFINITION, REFERENCES, RENAME,
                             TEXT_DOCUMENT_DID_CHANGE, INITIALIZE,
                             WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS,
                             WORKSPACE_DID_CHANGE_CONFIGURATION)
 from pygls.server import LanguageServer
+from pygls.uris import from_fs_path
 from bibparse import Biblio
 from .bibliography import find_key, key_positions
 from .completion import generate_list
@@ -190,3 +191,19 @@ def references(ls: LanguageServer,
     if key is None:
         return None
     return get_references(markdown_file, key)
+
+
+@citation_langserver.feature(RENAME)
+def rename(ls: LanguageServer,
+           params: types.RenameParams = None) -> types.WorkspaceEdit:
+    markdown_file = get_markdown_file(ls, params.textDocument.uri)
+    key, *_ = find_key(markdown_file, params.position)
+    new_key = params.newName
+    output = {}
+    output[params.textDocument.uri] = [
+        types.TextEdit(
+            range=loc.range,
+            new_text=new_key,
+        ) for loc in get_references(markdown_file, key)
+    ]
+    return types.WorkspaceEdit(changes=output)
