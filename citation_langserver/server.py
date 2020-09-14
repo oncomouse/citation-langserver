@@ -5,19 +5,29 @@ Official language server spec:
 """
 import errno
 import os
-from typing import Dict, List, Any
 from glob import glob
-from pygls import types
-from pygls.features import (HOVER, COMPLETION, DEFINITION, REFERENCES, RENAME,
-                            TEXT_DOCUMENT_DID_CHANGE, INITIALIZE,
-                            WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS,
-                            WORKSPACE_DID_CHANGE_CONFIGURATION)
-from pygls.server import LanguageServer
+from typing import Any
+from typing import Dict
+from typing import List
+
 from bibparse import Biblio
+from pygls import types
+from pygls.features import COMPLETION
+from pygls.features import DEFINITION
+from pygls.features import HOVER
+from pygls.features import INITIALIZE
+from pygls.features import REFERENCES
+from pygls.features import RENAME
+from pygls.features import TEXT_DOCUMENT_DID_CHANGE
+from pygls.features import WORKSPACE_DID_CHANGE_CONFIGURATION
+from pygls.features import WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS
+from pygls.server import LanguageServer
+
 from .bibliography import key_positions
 from .completion import generate_list
+from .document import find_key
+from .document import get_references
 from .format import info
-from .document import get_references, find_key
 
 cached_bibliographies = Biblio()
 workspace_folders = []
