@@ -1,7 +1,8 @@
 import re
+from typing import Dict
 
 
-def info(entry):
+def info(entry: Dict[str, str]) -> str:
     return "{title}{author}{date}".format(
         title=("Title: {}\n".format(re.sub(r"[}{]", "", entry["title"]))
                if "title" in entry else ""),

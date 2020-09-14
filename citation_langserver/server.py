@@ -37,7 +37,7 @@ class CitationLanguageServer(LanguageServer):
 citation_langserver = CitationLanguageServer()
 
 
-def __handle_glob(my_file):
+def __handle_glob(my_file: List[str]) -> List[str]:
     output = []
     for file in my_file:
         if glob_re.match(file):

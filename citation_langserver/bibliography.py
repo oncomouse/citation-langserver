@@ -1,4 +1,5 @@
 import re
+from typing import Dict, Tuple
 from pygls.types import Position, TextDocumentPositionParams, TextDocumentIdentifier
 from pygls.uris import from_fs_path
 
@@ -6,7 +7,7 @@ __key_re = re.compile(r"@[^,\s{}@\]\[]+\s*{\s*([^,\s{}@\]\[]+)")
 __non_cite_key_re = re.compile(r"[,\s}{@\]\[]")
 
 
-def key_positions(file_path):
+def key_positions(file_path: str) -> Dict[str, TextDocumentPositionParams]:
     fp = open(file_path)
     linenr = 0
     keys = {}
@@ -22,7 +23,7 @@ def key_positions(file_path):
     return keys
 
 
-def find_key(doc, position):
+def find_key(doc: Dict[str, str], position: Position) -> Tuple[str, int, int]:
     line = doc["source"].split("\n")[position.line]
     start_char = position.character - 1
     stop_char = position.character
@@ -38,4 +39,4 @@ def find_key(doc, position):
         if __non_cite_key_re.match(line[stop_char]):
             break
         stop_char += 1
-    return [line[start_char + 1:stop_char], start_char + 1, stop_char - 1]
+    return (line[start_char + 1:stop_char], start_char + 1, stop_char - 1)
