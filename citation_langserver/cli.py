@@ -1,10 +1,7 @@
 """Citation Language Server command line interface."""
 import argparse
-import logging
 
 from .server import citation_langserver
-
-logging.basicConfig(filename="pygls.log", level=logging.DEBUG, filemode="w")
 
 
 def add_arguments(parser):
