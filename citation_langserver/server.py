@@ -163,6 +163,10 @@ def definition(ls: LanguageServer,
     if key is None or not key in keys:
         return None
     key_position = keys[key]
-    return types.Location(uri=key_position.textDocument.uri,
-                          range=types.Range(start=key_position.position,
-                                            end=key_position.position))
+    return types.Location(
+        uri=key_position.textDocument.uri,
+        range=types.Range(
+            start=key_position.position,
+            end=types.Position(line=key_position.position.line,
+                               character=key_position.position.character +
+                               len(key))))
