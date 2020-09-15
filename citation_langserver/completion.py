@@ -2,7 +2,7 @@
 import re
 from typing import Generator
 
-from bibparse import Biblio  # type: ignore
+from bibparse import Biblio
 from pygls.types import CompletionItem
 from pygls.types import CompletionItemKind
 

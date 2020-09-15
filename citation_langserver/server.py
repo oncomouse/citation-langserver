@@ -11,7 +11,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from bibparse import Biblio  # type: ignore
+from bibparse import Biblio
 from pygls import types
 from pygls.features import COMPLETION
 from pygls.features import DEFINITION

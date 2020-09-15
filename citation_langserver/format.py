@@ -1,7 +1,7 @@
 """Citation Language Server Formatting Utilities"""
 import re
 
-from bibparse import BibItem  # type: ignore
+from bibparse import BibItem
 
 
 def info(entry: BibItem) -> str:
