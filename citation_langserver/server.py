@@ -9,6 +9,7 @@ from glob import glob
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
 from bibparse import Biblio
 from pygls import types
@@ -30,7 +31,7 @@ from .document import get_references
 from .format import info
 
 cached_bibliographies = Biblio()
-workspace_folders = []
+workspace_folders: List[str] = []
 configuration = {'bibliographies': ['~/*.bib']}
 keys = {}
 
@@ -71,7 +72,7 @@ def __read_bibliographies(bibliographies: List[str]) -> None:
         __read_bibliography(file)
 
 
-def __read_bibliography(maybe_glob: List[str]) -> None:
+def __read_bibliography(maybe_glob: str) -> None:
     for file in __handle_glob(__norm_file(maybe_glob)):
         if not os.path.exists(file):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
@@ -87,7 +88,7 @@ def __update_bibliography_configuration(config: List[Any]) -> None:
         __read_bibliographies(configuration['bibliographies'])
 
 
-markdown_files = {}
+markdown_files: Dict[str, Dict[str, str]] = {}
 
 
 def get_markdown_file(ls: LanguageServer,
@@ -105,9 +106,11 @@ def get_markdown_file(ls: LanguageServer,
 @citation_langserver.feature(INITIALIZE)
 def initialize(ls: LanguageServer, params: types.InitializeParams) -> None:
     """Initialization handler; sets rootPath and gets configuration, if possible"""
+    if params is None:
+        return
     if params.rootPath:
         workspace_folders.append(params.rootPath)
-    if params.workspace.configuration:
+    if params.capabilities.workspace is not None and params.capabilities.workspace.configuration:
         try:
             ls.get_configuration(
                 types.ConfigurationParams([
@@ -146,18 +149,20 @@ def did_change_workspace_folders(
         _ls: LanguageServer,
         params: types.DidChangeWorkspaceFoldersParams) -> None:
     """Handle opening and closing files in the workspace"""
-    workspace_folders.extend(params.event.added)
+    workspace_folders.extend(map(lambda x: x.name, params.event.added))
     for folder in params.event.removed:
-        workspace_folders.remove(folder)
+        workspace_folders.remove(folder.name)
     __read_bibliographies(configuration['bibliographies'])
 
 
 @citation_langserver.feature(HOVER)
 def hover(ls: LanguageServer,
-          params: types.TextDocumentPositionParams) -> types.Hover:
+          params: types.TextDocumentPositionParams) -> Optional[types.Hover]:
     """Get hover information for a symbol, if present at position"""
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, start, stop = find_key(markdown_file, params.position)
+    if start is None or stop is None:
+        return None
     if key is not None and key in cached_bibliographies:
         return types.Hover(contents=info(cached_bibliographies[key]),
                            range=types.Range(
@@ -169,22 +174,29 @@ def hover(ls: LanguageServer,
 
 
 @citation_langserver.feature(COMPLETION)  # , trigger_characters=['@'])
-def completion(ls: LanguageServer,
-               params: types.CompletionParams = None) -> types.CompletionList:
+def completion(
+        ls: LanguageServer,
+        params: types.CompletionParams = None
+) -> Optional[types.CompletionList]:
     """Handle completion if the user is typing a key"""
+    if params is None:
+        return None
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None:
-        return []
+        return None
     return types.CompletionList(
         False, list(generate_list(cached_bibliographies, search_key=key)))
 
 
 @citation_langserver.feature(DEFINITION)
 def definition(
-        ls: LanguageServer,
-        params: types.TextDocumentPositionParams = None) -> types.Location:
+    ls: LanguageServer,
+    params: types.TextDocumentPositionParams = None
+) -> Optional[types.Location]:
     """Goto definition of symbol, if a bibliography key is present"""
+    if params is None:
+        return None
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None or not key in keys:
@@ -200,9 +212,13 @@ def definition(
 
 
 @citation_langserver.feature(REFERENCES)
-def references(ls: LanguageServer,
-               params: types.ReferenceParams = None) -> List[types.Location]:
+def references(
+        ls: LanguageServer,
+        params: types.ReferenceParams = None
+) -> Optional[List[types.Location]]:
     """Find references to current symbol, if a bibliography key is present"""
+    if params is None:
+        return None
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None:
@@ -212,11 +228,15 @@ def references(ls: LanguageServer,
 
 @citation_langserver.feature(RENAME)
 def rename(ls: LanguageServer,
-           params: types.RenameParams = None) -> types.WorkspaceEdit:
+           params: types.RenameParams = None) -> Optional[types.WorkspaceEdit]:
     """Rename the symbol, if a bibliography key is present"""
+    if params is None:
+        return None
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     new_key = params.newName
+    if key is None:
+        return None
     output = {}
     output[params.textDocument.uri] = [
         types.TextEdit(

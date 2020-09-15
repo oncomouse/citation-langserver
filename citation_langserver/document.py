@@ -1,12 +1,20 @@
 """Citation Language Server Document Utilities"""
 import re
-from typing import Dict, List, Tuple
-from pygls.types import Location, Range, Position
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+from pygls.types import Location
+from pygls.types import Position
+from pygls.types import Range
 from pygls.uris import from_fs_path
 __non_cite_key_re = re.compile(r"[,\s}{@\]\[]")
 
 
-def find_key(doc: Dict[str, str], position: Position) -> Tuple[str, int, int]:
+def find_key(
+        doc: Dict[str, str], position: Position
+) -> Tuple[Optional[str], Optional[int], Optional[int]]:
     """Given a representation of a document and a position object, find if the
     user is typing a key at that position and return the entire typed key, if
     present."""
@@ -17,10 +25,10 @@ def find_key(doc: Dict[str, str], position: Position) -> Tuple[str, int, int]:
         if line[start_char] == '@':
             break
         if __non_cite_key_re.match(line[start_char]):
-            return [None, None, None]
+            return (None, None, None)
         start_char -= 1
     if start_char < 0:
-        return [None, None, None]
+        return (None, None, None)
     while stop_char < len(line):
         if __non_cite_key_re.match(line[stop_char]):
             break

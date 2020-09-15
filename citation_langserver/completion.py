@@ -1,13 +1,16 @@
 """Citation Language Server Completion Utilities"""
 import re
-from typing import List
-from pygls.types import CompletionItem, CompletionItemKind
+from typing import Generator
+
 from bibparse import Biblio
+from pygls.types import CompletionItem
+from pygls.types import CompletionItemKind
+
 from .format import info
 
 
 def generate_list(bibliographies: Biblio,
-                  search_key: str) -> List[CompletionItem]:
+                  search_key: str) -> Generator[CompletionItem, None, None]:
     """Given a bibliography and a search string, find all completion items
     that might match the entry."""
     key_regex = re.compile('^{}.*'.format(search_key))

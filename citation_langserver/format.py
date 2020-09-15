@@ -1,6 +1,6 @@
 """Citation Language Server Formatting Utilities"""
 import re
-from typing import Dict
+
 from bibparse import BibItem
 
 
