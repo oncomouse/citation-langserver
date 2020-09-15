@@ -186,14 +186,14 @@ def hover(
 @citation_langserver.feature(COMPLETION)  # , trigger_characters=['@'])
 def completion(
     ls: LanguageServer, params: types.CompletionParams = None
-) -> Optional[types.CompletionList]:
+) -> types.CompletionList:
     """Handle completion if the user is typing a key"""
     if params is None:
-        return None
+        return types.CompletionList(False, [])
     markdown_file = get_markdown_file(ls, params.textDocument.uri)
     key, *_ = find_key(markdown_file, params.position)
     if key is None:
-        return None
+        return types.CompletionList(False, [])
     return types.CompletionList(
         False, list(generate_list(cached_bibliographies, search_key=key))
     )
