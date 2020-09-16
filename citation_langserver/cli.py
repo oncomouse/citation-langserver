@@ -2,19 +2,19 @@
 import argparse
 
 from .server import citation_langserver
+# import logging
+
+# logging.basicConfig(filename="pygls.log", filemode="w", level=logging.DEBUG)
 
 
 def add_arguments(parser):
     parser.description = "LanguageServer for BibTeX files"
-    parser.add_argument("--tcp",
-                        action="store_true",
-                        help="Use TCP server instead of stdio")
-    parser.add_argument("--host",
-                        default="127.0.0.1",
+    parser.add_argument(
+        "--tcp", action="store_true", help="Use TCP server instead of stdio"
+    )
+    parser.add_argument("--host", default="127.0.0.1",
                         help="Bind to this address")
-    parser.add_argument("--port",
-                        type=int,
-                        default=2087,
+    parser.add_argument("--port", type=int, default=2087,
                         help="Bind to this port")
 
 
