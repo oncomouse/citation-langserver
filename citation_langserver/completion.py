@@ -18,7 +18,7 @@ def generate_list(
     for key in list(filter(key_regex.match, bibliographies.keys())):
         entry = bibliographies[key]
         yield CompletionItem(
-            label="@{}".format(key),
+            label="{}".format(key),
             kind=CompletionItemKind.Text,
             documentation=info(entry),
             insert_text=key,

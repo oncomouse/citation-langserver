@@ -26,7 +26,8 @@ def find_key(
         if line[start_char] == "@":
             break
         if line[start_char] == "{":
-            if start_char >= 4 and line[start_char - 4: 4] == "cite":
+            print("Found in {} at {}".format(line, start_char))
+            if start_char >= 4 and line[start_char - 4: start_char] == "cite":
                 break
             return (None, None, None)
         if __non_cite_key_re.match(line[start_char]):
