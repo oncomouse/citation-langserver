@@ -25,12 +25,10 @@ def find_key(
     while start_char >= 0:
         if line[start_char] == "@":
             break
-        if (
-            line[start_char] == "{"
-            and start_char >= 4
-            and line[start_char - 4: 4] == "cite"
-        ):
-            break
+        if line[start_char] == "{":
+            if start_char >= 4 and line[start_char - 4: 4] == "cite":
+                break
+            return (None, None, None)
         if __non_cite_key_re.match(line[start_char]):
             return (None, None, None)
         start_char -= 1
