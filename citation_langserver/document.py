@@ -23,18 +23,25 @@ def find_key(
     start_char = position.character - 1
     stop_char = position.character
     while start_char >= 0:
+        # We have found a Markdown citation key:
         if line[start_char] == "@":
             break
+        # We may have found a LaTeX citation key:
         if line[start_char] == "{":
-            print("Found in {} at {}".format(line, start_char))
+            # We have found a LaTeX citation key:
             if start_char >= 4 and line[start_char - 4: start_char] == "cite":
                 break
+            # We have not found a LaTeX citation key:
             return (None, None, None)
+        # We have found a character not allowed in a citation key before
+        # finding a terminator key (for Markdown or LaTeX):
         if __non_cite_key_re.match(line[start_char]):
             return (None, None, None)
         start_char -= 1
+    # We did not find a citation key:
     if start_char < 0:
         return (None, None, None)
+    # Find the end of the citation key:
     while stop_char < len(line):
         if __non_cite_key_re.match(line[stop_char]):
             break
