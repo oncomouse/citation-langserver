@@ -103,25 +103,29 @@ def get_markdown_file(
         markdown_files[uri] = result
     return result
 
-has_completion = False
+
+has_get_configuration = False
+
 
 @citation_langserver.feature(INITIALIZE)
-def initialize(ls: LanguageServer, params: types.InitializeParams) -> None:
+def initialize(_ls: LanguageServer, params: types.InitializeParams) -> None:
     """Initialization handler; sets rootPath and gets configuration, if possible"""
-    global has_completion
+    global has_get_configuration
     if params is None:
         return
     if params.rootPath:
         workspace_folders.append(params.rootPath)
-    if (params.capabilities.workspace is not None
-        and params.capabilities.workspace.configuration):
-        has_completion = True
+    if (
+        params.capabilities.workspace is not None
+        and params.capabilities.workspace.configuration
+    ):
+        has_get_configuration = True
 
 
 @citation_langserver.feature(INITIALIZED)
-def initialized(ls: LanguageServer, params: types.InitializeParams) -> None:
+def initialized(ls: LanguageServer, _params: types.InitializeParams) -> None:
     """Initialization handler; sets rootPath and gets configuration, if possible"""
-    if has_completion:
+    if has_get_configuration:
         try:
             ls.get_configuration(
                 types.ConfigurationParams(
