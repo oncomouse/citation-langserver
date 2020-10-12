@@ -10,7 +10,7 @@ Run `pip3 citation-langserver` to install.
 
 Configure `citation-langserver` as you would any other LSP in your text editor of choice.
 
-For instance, using [CoC](https://github.com/neoclide/coc.nvim) in vim, you might add the following to your `coc-settings.json` file:
+For instance, using [CoC](https://github.com/neoclide/coc.nvim) in Vim, you might add the following to your `coc-settings.json` file:
 
 ```json
   "languageserver": {
