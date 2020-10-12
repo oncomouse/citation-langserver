@@ -1,6 +1,8 @@
 # citation-langserver
 
-This uses the [Language Server Protocol](https://langserver.org/) to handle the inclusion and management of citations stored in BibTeX and BibLaTeX (`.bib`) files.
+citation-langserver is a language server for working with citations stored in BibTeX or BibLaTeX files.
+
+citation-langserver supports code completion, hover, jump to definition, and find references. It supports absolute file paths for bibliographies, relative file paths, as well as glob-based file paths. It is compatible with all clients that support the [Language Server Protocol](https://langserver.org/)
 
 # Installation
 

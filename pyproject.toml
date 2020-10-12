@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "citation-langserver"
-version = "0.1.0"
+version = "0.1.1"
 description = "A language server for managing citations stored in BibTeX and BibLaTeX files."
 license = "MIT"
 authors = ["oncomouse <oncomouse@gmail.com>"]
 homepage = "https://github.com/oncomouse/citation-langserver"
 repository = "https://github.com/oncomouse/citation-langserver"
+readme = "README.md"
 classifiers = [
   "Topic :: Text Editors",
   "Topic :: Text Editors :: Integrated Development Environments (IDE)",
