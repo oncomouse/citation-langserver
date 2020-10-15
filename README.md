@@ -6,7 +6,7 @@ citation-langserver supports code completion, hover, jump to definition, and fin
 
 # Installation
 
-Run `pip3 citation-langserver` to install.
+Run `pip3 install citation-langserver` to install.
 
 # Usage
 
