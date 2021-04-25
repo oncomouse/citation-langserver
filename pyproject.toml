@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "citation-langserver"
-version = "0.1.1"
+version = "0.2.0"
 description = "A language server for managing citations stored in BibTeX and BibLaTeX files."
 license = "MIT"
 authors = ["oncomouse <oncomouse@gmail.com>"]
@@ -19,8 +19,8 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.5"
-pygls = "^0.9.0"
+python = "^3.6.1"
+pygls = "^0.10.2"
 bibparse = "^1.0.0"
 
 [tool.poetry.dev-dependencies]

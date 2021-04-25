@@ -1,5 +1,6 @@
 """Citation Language Server command line interface."""
 import argparse
+import sys
 
 from .server import citation_langserver
 # import logging
@@ -23,7 +24,10 @@ def cli():
     add_arguments(parser)
     args = parser.parse_args()
 
-    if args.tcp:
-        citation_langserver.start_tcp(args.host, args.port)
-    else:
-        citation_langserver.start_io()
+    try:
+        if args.tcp:
+            citation_langserver.start_tcp(args.host, args.port)
+        else:
+            citation_langserver.start_io()
+    except BrokenPipeError as err:
+        sys.exit()

@@ -1,7 +1,7 @@
 """Bibliography Utiltities"""
 import re
 from typing import Dict
-from pygls.types import Position, TextDocumentPositionParams, TextDocumentIdentifier
+from pygls.lsp.types import Position, TextDocumentPositionParams, TextDocumentIdentifier
 from pygls.uris import from_fs_path
 
 __key_re = re.compile(r"@[^,\s{}@\]\[]+\s*{\s*([^,\s{}@\]\[]+)")

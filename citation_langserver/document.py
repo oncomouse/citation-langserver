@@ -5,9 +5,9 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from pygls.types import Location
-from pygls.types import Position
-from pygls.types import Range
+from pygls.lsp.types import Location
+from pygls.lsp.types import Position
+from pygls.lsp.types import Range
 from pygls.uris import from_fs_path
 
 __non_cite_key_re = re.compile(r"[,\s}{@\]\[]")
