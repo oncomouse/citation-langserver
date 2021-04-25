@@ -6,7 +6,6 @@ Official language server spec:
 import errno
 import os
 import sys
-import logging
 from glob import glob
 from typing import Any
 from typing import Dict
@@ -32,6 +31,7 @@ from .completion import generate_list
 from .document import find_key
 from .document import get_references
 from .format import info
+# import logging
 
 cached_bibliographies = Biblio()
 workspace_folders: List[str] = []
@@ -48,7 +48,7 @@ class CitationLanguageServer(LanguageServer):
         super().__init__()
 
 
-logging.basicConfig(filename='pygls.log', filemode='w', level=logging.DEBUG)
+# logging.basicConfig(filename='pygls.log', filemode='w', level=logging.DEBUG)
 citation_langserver = CitationLanguageServer()
 
 
