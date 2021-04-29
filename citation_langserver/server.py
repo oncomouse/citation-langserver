@@ -5,7 +5,6 @@ Official language server spec:
 """
 import errno
 import os
-import sys
 from glob import glob
 from typing import Any
 from typing import Dict
@@ -22,6 +21,7 @@ from pygls.lsp import types
 from pygls.lsp.methods import INITIALIZE
 from pygls.lsp.methods import INITIALIZED
 from pygls.lsp.methods import TEXT_DOCUMENT_DID_CHANGE
+from pygls.lsp.methods import TEXT_DOCUMENT_DID_OPEN
 from pygls.lsp.methods import WORKSPACE_DID_CHANGE_CONFIGURATION
 from pygls.lsp.methods import WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS
 from pygls.server import LanguageServer
@@ -149,6 +149,11 @@ def initialized(ls: LanguageServer, _params: types.InitializeParams) -> None:
 def did_change(ls: LanguageServer, params: types.DidChangeTextDocumentParams) -> None:
     """Update document cache on document change event."""
     get_markdown_file(ls, params.text_document.uri, True)
+
+@citation_langserver.feature(TEXT_DOCUMENT_DID_OPEN)
+def did_open(_ls: LanguageServer) -> None:
+    """I'm just here so you don't get fined."""
+    pass
 
 
 @citation_langserver.feature(WORKSPACE_DID_CHANGE_CONFIGURATION)
